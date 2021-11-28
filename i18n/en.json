@@ -1,0 +1,10 @@
+{
+  "@metadata": {
+    "authors": [
+      "Chris Rishel"
+    ]
+  },
+  "contributionscoresautopromote": "Contribution Scores Autopromote",
+  "contributionscoresautopromote-extensionname": "ContributionScoresAutopromote",
+  "contributionscoresautopromote-desc": "Adds the ability to autopromote users based upon contribution score thresholds."
+}

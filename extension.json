@@ -1,0 +1,46 @@
+{
+  "name": "ContributionScoresAutopromote",
+  "namemsg": "contributionscoresautopromote-extensionname",
+  "version": "0.1.0",
+  "author": [
+    "Chris Rishel"
+  ],
+  "license-name": "GPL-3.0-or-later",
+  "url": "https://www.mediawiki.org/wiki/Extension:ContributionScoresAutopromote",
+  "descriptionmsg": "contributionscoresautopromote-desc",
+  "type": "other",
+  "requires": {
+    "MediaWiki": ">= 1.35.0",
+    "extensions": {
+      "ContributionScores": "*"
+    }
+  },
+  "callback": "MediaWiki\\Extension\\ContributionScoresAutopromote\\ContributionScoresAutopromote::initialize",
+  "config_prefix": "wg",
+  "config": {
+    "ContributionScoresAutopromoteAddUsersToUsergroup": {
+      "value": false
+    },
+    "ContributionScoresAutopromotePromotions": {
+      "value": {}
+    }
+  },
+  "AutoloadNamespaces": {
+    "MediaWiki\\Extension\\ContributionScoresAutopromote\\": "src/"
+  },
+  "Hooks": {
+    "AutopromoteCondition": "main",
+    "BeforeInitialize": "main"
+  },
+  "HookHandlers": {
+    "main": {
+      "class": "MediaWiki\\Extension\\ContributionScoresAutopromote\\Hook\\HookHandler"
+    }
+  },
+  "MessagesDirs": {
+    "ContributionScoresAutopromote": [
+      "i18n"
+    ]
+  },
+  "manifest_version": 2
+}
