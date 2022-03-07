@@ -49,7 +49,7 @@ class ContributionScoresAutopromote {
     }
 
     public static function isMetricThresholdMet( User $user, string $metric, float $threshold ) {
-        $contributionScore = ContributionScores::getMetricValue( $user->getName(), $metric );
+        $contributionScore = ContributionScores::getMetricValue( $user, $metric );
 
         return $contributionScore && $contributionScore >= $threshold;
     }

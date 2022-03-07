@@ -30,7 +30,7 @@
   },
   "Hooks": {
     "AutopromoteCondition": "main",
-    "BeforeInitialize": "main"
+    "PageSaveComplete": "main"
   },
   "HookHandlers": {
     "main": {

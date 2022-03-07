@@ -3,12 +3,12 @@
 namespace MediaWiki\Extension\ContributionScoresAutopromote\Hook;
 
 use MediaWiki\Extension\ContributionScoresAutopromote\ContributionScoresAutopromote;
-use MediaWiki\Hook\BeforeInitializeHook;
+use MediaWiki\Storage\Hook\PageSaveCompleteHook;
 use MediaWiki\User\Hook\AutopromoteConditionHook;
 
 class HookHandler implements
     AutopromoteConditionHook,
-    BeforeInitializeHook {
+    PageSaveCompleteHook {
 
     public function onAutopromoteCondition( $type, $args, $user, &$result ): bool {
         $result = false;
@@ -25,7 +25,7 @@ class HookHandler implements
         return true;
     }
 
-    public function onBeforeInitialize( $title, $unused, $output, $user, $request, $mediaWiki ) {
+    public function onPageSaveComplete( $wikiPage, $user, $summary, $flags, $revisionRecord, $editResult ) {
         ContributionScoresAutopromote::tryPromote( $user );
     }
 }
