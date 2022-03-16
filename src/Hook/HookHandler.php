@@ -10,22 +10,20 @@ class HookHandler implements
     AutopromoteConditionHook,
     PageSaveCompleteHook {
 
-    public function onAutopromoteCondition( $type, $args, $user, &$result ): bool {
-        $result = false;
-
+    public function onAutopromoteCondition( $type, $args, $user, &$result ) {
         if( $type === APCOND_CONTRIBUTIONSCORE ) {
             $metric = $args[ 0 ] ?? null;
             $threshold = $args[ 1 ] ?? null;
 
-            if( $metric && $threshold ) {
+            if( $metric && $threshold && ContributionScoresAutopromote::canAutopromote( $user ) ) {
                 $result = ContributionScoresAutopromote::isMetricThresholdMet( $user, $metric, $threshold );
+            } else {
+                $result = false;
             }
         }
-
-        return true;
     }
 
     public function onPageSaveComplete( $wikiPage, $user, $summary, $flags, $revisionRecord, $editResult ) {
-        ContributionScoresAutopromote::tryPromote( $user );
+        ContributionScoresAutopromote::tryPromoteAddUserToUsergroup( $user );
     }
 }

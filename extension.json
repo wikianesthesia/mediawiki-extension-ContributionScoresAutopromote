@@ -21,8 +21,11 @@
     "ContributionScoresAutopromoteAddUsersToUsergroup": {
       "value": false
     },
+    "ContributionScoresAutopromoteIgnoreUsernames": {
+      "value": []
+    },
     "ContributionScoresAutopromotePromotions": {
-      "value": {}
+      "value": []
     }
   },
   "AutoloadNamespaces": {

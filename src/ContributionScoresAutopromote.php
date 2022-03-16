@@ -4,15 +4,32 @@ namespace MediaWiki\Extension\ContributionScoresAutopromote;
 
 use ContributionScores;
 use MediaWiki\MediaWikiServices;
+use RequestContext;
 use User;
 
 class ContributionScoresAutopromote {
+    public static function canAutopromote( User $user = null ): bool {
+        global $wgContributionScoresAutopromotePromotions, $wgContributionScoresAutopromoteIgnoreUsernames;
+
+        $user = $user ?? RequestContext::getMain()->getUser();
+
+        // If no promotion conditions are defined, no user is logged in, or the user is configured to be ignored
+        if( !count( $wgContributionScoresAutopromotePromotions ) ||
+            !$user->isRegistered() ||
+            in_array( $user->getName(), $wgContributionScoresAutopromoteIgnoreUsernames ) ) {
+            return false;
+        }
+
+        return true;
+    }
+
     public static function initialize() {
         global $wgAutopromote, $wgContribScoreMetric,
                $wgContributionScoresAutopromotePromotions, $wgContributionScoresAutopromoteAddUsersToUsergroup;
 
         define( 'APCOND_CONTRIBUTIONSCORE', 27271 );
 
+        // Don't define autopromote conditions if no promote conditions are configured
         if( !count( $wgContributionScoresAutopromotePromotions ) ) {
             return;
         }
@@ -48,22 +65,22 @@ class ContributionScoresAutopromote {
         }
     }
 
-    public static function isMetricThresholdMet( User $user, string $metric, float $threshold ) {
+    public static function isMetricThresholdMet( User $user, string $metric, float $threshold ): bool {
         $contributionScore = ContributionScores::getMetricValue( $user, $metric );
 
         return $contributionScore && $contributionScore >= $threshold;
     }
 
-    public static function tryPromote( User $user ) {
+    public static function tryPromoteAddUserToUsergroup( User $user ) {
         global $wgContributionScoresAutopromotePromotions, $wgContributionScoresAutopromoteAddUsersToUsergroup,
                $wgContribScoreMetric;
 
-        if( !count( $wgContributionScoresAutopromotePromotions ) ) {
+        // Don't try to explicitly promote user unless configured accordingly
+        if( !$wgContributionScoresAutopromoteAddUsersToUsergroup ) {
             return;
         }
 
-        // Don't try to explicitly promote user unless configured accordingly
-        if( !$wgContributionScoresAutopromoteAddUsersToUsergroup ) {
+        if( !static::canAutopromote( $user ) ) {
             return;
         }
 
