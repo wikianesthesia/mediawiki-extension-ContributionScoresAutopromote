@@ -21,9 +21,9 @@ class AutopromoteAllUsers extends Maintenance {
      * @inheritDoc
      */
     public function execute() {
-        global $wgContributionScoresAutopromoteAddUsersToUsergroup;
+        global $wgContributionScoresAutopromoteAddUsersToUserGroup;
 
-        if( !$wgContributionScoresAutopromoteAddUsersToUsergroup ) {
+        if( !$wgContributionScoresAutopromoteAddUsersToUserGroup ) {
             $this->output( 'Autopromotion maintenance is not required if $wgContributionScoresAutopromoteAddUsersToUsergroup is false since no usergroups will be added to the database.' . "\n" );
 
             return;
@@ -44,7 +44,12 @@ class AutopromoteAllUsers extends Maintenance {
 
         foreach( $res as $row ) {
             $user = User::newFromId( $row->user_id );
-            ContributionScoresAutopromote::tryPromote( $user );
+            $promotedUserGroups = ContributionScoresAutopromote::tryPromoteAddUserToUserGroup( $user );
+
+            $promotedUserGroupsString = count( $promotedUserGroups ) ?
+                implode( ', ', $promotedUserGroups ) :
+                'no groups';
+            $this->output( 'User "' . $user->getName() . '": Added ' . $promotedUserGroupsString . "\n" );
         }
 
         $this->output( 'Autopromotion processed for ' . $res->numRows() . ' users.' . "\n" );

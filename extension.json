@@ -18,7 +18,7 @@
   "callback": "MediaWiki\\Extension\\ContributionScoresAutopromote\\ContributionScoresAutopromote::initialize",
   "config_prefix": "wg",
   "config": {
-    "ContributionScoresAutopromoteAddUsersToUsergroup": {
+    "ContributionScoresAutopromoteAddUsersToUserGroup": {
       "value": false
     },
     "ContributionScoresAutopromoteIgnoreUsernames": {

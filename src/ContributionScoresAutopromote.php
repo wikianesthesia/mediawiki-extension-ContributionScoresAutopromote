@@ -25,7 +25,7 @@ class ContributionScoresAutopromote {
 
     public static function initialize() {
         global $wgAutopromote, $wgContribScoreMetric,
-               $wgContributionScoresAutopromotePromotions, $wgContributionScoresAutopromoteAddUsersToUsergroup;
+               $wgContributionScoresAutopromotePromotions, $wgContributionScoresAutopromoteAddUsersToUserGroup;
 
         define( 'APCOND_CONTRIBUTIONSCORE', 27271 );
 
@@ -35,30 +35,45 @@ class ContributionScoresAutopromote {
         }
 
         // Don't define autopromote conditions if configured to explicitly add users to usergroups
-        if( $wgContributionScoresAutopromoteAddUsersToUsergroup ) {
+        if( $wgContributionScoresAutopromoteAddUsersToUserGroup ) {
             return;
         }
+
+        // Autopromote conditions may need to merge with existing conditions, so gather this extensions conditions
+        // by usergroup and assign results to $wgAutopromote all at once after the main loop
+        $contributionScoresAutopromoteConditions = [];
 
         foreach( $wgContributionScoresAutopromotePromotions as $promotion ) {
             $metric = $promotion[ 'metric' ] ?? $wgContribScoreMetric;
             $threshold = $promotion[ 'threshold' ] ?? null;
-            $userGroup = $promotion[ 'usergroup' ] ?? null;
+            $userGroups = $promotion[ 'usergroup' ] ?? null;
 
-            if( !$metric || !$threshold || !$userGroup ) {
+            if( !$metric || !$threshold || !$userGroups ) {
                 continue;
             }
 
-            $autopromoteCondition = [
-                APCOND_CONTRIBUTIONSCORE,
-                $metric, $threshold
-            ];
+            // If usergroups is a string, convert to array
+            $userGroups = is_array( $userGroups ) ? $userGroups : [ $userGroups ];
 
+            foreach( $userGroups as $userGroup ) {
+                if( !isset( $contributionScoresAutopromoteConditions[ $userGroup ] ) ) {
+                    $contributionScoresAutopromoteConditions[ $userGroup ] = [ '|' ];
+                }
+
+                $contributionScoresAutopromoteConditions[ $userGroup ][] = [
+                    APCOND_CONTRIBUTIONSCORE,
+                    $metric, $threshold
+                ];
+            }
+        }
+
+        foreach( $contributionScoresAutopromoteConditions as $userGroup => $autopromoteConditions ) {
             if( !isset( $wgAutopromote[ $userGroup ] ) ) {
-                $wgAutopromote[ $userGroup ] = $autopromoteCondition;
+                $wgAutopromote[ $userGroup ] = $autopromoteConditions;
             } else {
                 $wgAutopromote[ $userGroup ] = [
                     '|',
-                    $autopromoteCondition,
+                    $autopromoteConditions,
                     $wgAutopromote[ $userGroup ]
                 ];
             }
@@ -71,34 +86,44 @@ class ContributionScoresAutopromote {
         return $contributionScore && $contributionScore >= $threshold;
     }
 
-    public static function tryPromoteAddUserToUsergroup( User $user ) {
-        global $wgContributionScoresAutopromotePromotions, $wgContributionScoresAutopromoteAddUsersToUsergroup,
+    public static function tryPromoteAddUserToUserGroup( User $user ): array {
+        global $wgContributionScoresAutopromotePromotions, $wgContributionScoresAutopromoteAddUsersToUserGroup,
                $wgContribScoreMetric;
 
+        $promotedUserGroups = [];
+
         // Don't try to explicitly promote user unless configured accordingly
-        if( !$wgContributionScoresAutopromoteAddUsersToUsergroup ) {
-            return;
+        if( !$wgContributionScoresAutopromoteAddUsersToUserGroup ) {
+            return $promotedUserGroups;
         }
 
         if( !static::canAutopromote( $user ) ) {
-            return;
+            return $promotedUserGroups;
         }
 
         foreach( $wgContributionScoresAutopromotePromotions as $promotion ) {
             $metric = $promotion[ 'metric' ] ?? $wgContribScoreMetric;
             $threshold = $promotion[ 'threshold' ] ?? null;
-            $userGroup = $promotion[ 'usergroup' ] ?? null;
+            $userGroups = $promotion[ 'usergroup' ] ?? null;
 
-            if( !$metric || !$threshold || !$userGroup ) {
+            if( !$metric || !$threshold || !$userGroups ) {
                 continue;
             }
 
+            // If usergroups is a string, convert to array
+            $userGroups = is_array( $userGroups ) ? $userGroups : [ $userGroups ];
+
             $userGroupManager = MediaWikiServices::getInstance()->getUserGroupManager();
 
-            if( !in_array( $userGroup, $userGroupManager->getUserGroups( $user ) ) &&
-                static::isMetricThresholdMet( $user, $metric, $threshold ) ) {
-                $userGroupManager->addUserToGroup( $user, $userGroup );
+            foreach( $userGroups as $userGroup ) {
+                if( !in_array( $userGroup, $userGroupManager->getUserGroups( $user ) ) &&
+                    static::isMetricThresholdMet( $user, $metric, $threshold ) ) {
+                    $userGroupManager->addUserToGroup( $user, $userGroup );
+                    $promotedUserGroups[] = $userGroup;
+                }
             }
         }
+
+        return $promotedUserGroups;
     }
 }

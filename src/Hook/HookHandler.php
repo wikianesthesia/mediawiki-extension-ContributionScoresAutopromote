@@ -24,6 +24,6 @@ class HookHandler implements
     }
 
     public function onPageSaveComplete( $wikiPage, $user, $summary, $flags, $revisionRecord, $editResult ) {
-        ContributionScoresAutopromote::tryPromoteAddUserToUsergroup( $user );
+        ContributionScoresAutopromote::tryPromoteAddUserToUserGroup( $user );
     }
 }
